@@ -1354,7 +1354,7 @@
         const currentMins = Math.floor(idleTimeoutSecs / 60);
         const currentSecs = idleTimeoutSecs % 60;
         const timeText = currentMins > 0 ? `${currentMins} 分鐘` : `${currentSecs} 秒`;
-        document.getElementById('loginSubtitle').innerText = `閒置超過 ${timeText}，請輸入通行證解鎖`;
+        document.getElementById('loginSubtitle').innerText = `操作逾時，請輸入通行證解鎖`;
         
         document.getElementById('accessPass').value = '';
         document.getElementById('loginOverlay').style.display = 'flex';
