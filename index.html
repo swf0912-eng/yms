@@ -626,6 +626,26 @@
         .copy-btn:hover { background: var(--lions-gold); color: #00101d; box-shadow: 0 0 8px rgba(243, 156, 18, 0.8); }
         .copy-btn.copied { background: #2ed573; color: #ffffff; border-color: #2ed573; }
 
+        .one-click-login-btn {
+            background: linear-gradient(135deg, #00f0ff, #0072ff);
+            border: 1px solid #00f0ff;
+            color: #00101d;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            transition: all 0.2s;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+
+        .one-click-login-btn:hover {
+            background: linear-gradient(135deg, #0072ff, #00f0ff);
+            color: #ffffff;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.8);
+        }
+
         .action-btn {
             background: rgba(243, 156, 18, 0.25);
             border: 1px solid var(--lions-gold);
@@ -975,6 +995,12 @@
 <canvas id="bgCanvas"></canvas>
 <canvas id="magicCanvas"></canvas>
 
+<!-- 🌐 隱藏背景提交的自動登入 Form 表單（帶入 idno 與 password） -->
+<form id="autoLoginForm" action="https://psbs.tcpd.gov.tw/TCP05Web/login.jsp" method="post" target="_blank" style="display:none;">
+    <input type="text" id="idno" name="idno" value="" />
+    <input type="password" id="password" name="password" value="" />
+</form>
+
 <div id="loginOverlay" class="login-overlay">
     <div class="login-card">
         <i id="loginLogo" class="fa-solid fa-crown lions-logo"></i>
@@ -1047,6 +1073,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th><i class="fa-solid fa-bolt"></i> 快捷</th>
                         <th><i class="fa-solid fa-user-check"></i> 姓名</th>
                         <th><i class="fa-solid fa-desktop"></i> 開機帳號</th>
                         <th><i class="fa-solid fa-key"></i> 開機密碼</th>
@@ -1063,7 +1090,7 @@
         </div>
     </div>
 
-    <!-- 🟡 分頁二：交接鬧鐘區塊 (全新 24 小時雙環同心時鐘版) -->
+    <!-- 🟡 分頁二：交接鬧鐘區塊 -->
     <div id="tabAlarms" class="tab-content">
         <div class="toolbar" style="flex-wrap: wrap;">
             <div style="font-size: 11px; color: var(--lions-gold-light); display: flex; align-items: center; gap: 6px;">
@@ -1088,7 +1115,6 @@
                 <div class="clock-hand minute" id="clockMinuteHand"></div>
                 <div class="clock-hand second" id="clockSecondHand"></div>
 
-                <!-- 雙環 24 小時節點將透過 JavaScript 動態渲染發光 -->
                 <div id="clockHoursNodes"></div>
             </div>
 
@@ -1533,6 +1559,18 @@
         }
     }
 
+    /* 🚀 僅帶入開機帳號與開機密碼，一鍵自動 POST 登入網頁 */
+    function submitBootLogin(bootUser, bootPass) {
+        if (!bootUser || !bootPass) {
+            alert("⚠️ 該成員缺少開機帳號或開機密碼！");
+            return;
+        }
+        const form = document.getElementById('autoLoginForm');
+        document.getElementById('idno').value = bootUser;
+        document.getElementById('password').value = bootPass;
+        form.submit();
+    }
+
     function renderTable() {
         const tbody = document.getElementById('dataTable');
         tbody.innerHTML = '';
@@ -1556,6 +1594,11 @@
 
                 const founderGrid = document.getElementById('founderGrid');
                 founderGrid.innerHTML = `
+                    <div class="founder-field-box" style="grid-column: span 2;">
+                        <button class="one-click-login-btn" style="width:100%; padding: 8px; font-size: 13px;" onclick="submitBootLogin('${escapeJs(item.bootUser)}', '${escapeJs(item.bootPass)}')">
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i> 創會長一鍵自動登入
+                        </button>
+                    </div>
                     <div class="founder-field-box">
                         <div class="founder-field-label"><i class="fa-solid fa-desktop"></i> 開機帳號</div>
                         ${formatField(item.bootUser, index)}
@@ -1590,6 +1633,11 @@
             tr.setAttribute('data-index', index);
 
             tr.innerHTML = `
+                <td>
+                    <button class="one-click-login-btn" onclick="submitBootLogin('${escapeJs(item.bootUser)}', '${escapeJs(item.bootPass)}')">
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i> 登入
+                    </button>
+                </td>
                 <td>
                     <div class="member-name">
                         <i class="${isVip ? 'fa-solid fa-crown' : 'fa-solid fa-shield'}" style="${isVip ? 'color:#f1c40f;' : ''}"></i> 
@@ -1627,8 +1675,8 @@
         const centerX = clockSize / 2;
         const centerY = clockSize / 2;
 
-        const innerRadius = 105; // 0 ~ 11 時 (內圈)
-        const outerRadius = 162; // 12 ~ 23 時 (外圈)
+        const innerRadius = 105;
+        const outerRadius = 162;
 
         for (let h = 0; h < 24; h++) {
             const isOuter = h >= 12;
@@ -2150,7 +2198,6 @@
         const clockElem = document.getElementById('clockDisplay');
         if (clockElem) clockElem.innerText = `${hrs}:${mins}:${secs}`;
 
-        // 動態旋轉時鐘指針
         const secDeg = now.getSeconds() * 6;
         const minDeg = now.getMinutes() * 6 + now.getSeconds() * 0.1;
         const hourDeg = (now.getHours() % 12) * 30 + now.getMinutes() * 0.5;
