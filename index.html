@@ -4,15 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>獅子會陽明山分會 - 資訊管理系統</title>
-    <!-- Google Fonts & Font Awesome Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <style>
         :root {
@@ -659,7 +658,6 @@
 
         .action-btn:hover { background: rgba(243, 156, 18, 0.5); color: #ffffff; box-shadow: 0 0 10px rgba(243, 156, 18, 0.6); }
 
-        /* ⏰ 時鐘造型雙環鬧鐘專屬樣式 */
         .clock-alarm-wrapper {
             display: flex;
             flex-direction: column;
@@ -680,7 +678,6 @@
             user-select: none;
         }
 
-        /* 鬧鐘時鐘同心環刻度線 */
         .clock-ring-outer {
             position: absolute;
             top: 10px; left: 10px; right: 10px; bottom: 10px;
@@ -708,7 +705,6 @@
             z-index: 10;
         }
 
-        /* 時針分針與秒針 */
         .clock-hand {
             position: absolute;
             bottom: 50%; left: 50%;
@@ -722,7 +718,6 @@
         .clock-hand.minute { width: 3px; height: 110px; background: #00f0ff; box-shadow: 0 0 8px #00f0ff; }
         .clock-hand.second { width: 1.5px; height: 135px; background: #ff4757; box-shadow: 0 0 6px #ff4757; z-index: 9; }
 
-        /* 雙環數字按鈕 */
         .hour-node {
             position: absolute;
             width: 36px;
@@ -749,7 +744,6 @@
             box-shadow: 0 0 15px #00f0ff;
         }
 
-        /* 鬧鐘開啟時的閃耀質感 */
         .hour-node.active {
             background: linear-gradient(135deg, #2ed573, #1e90ff);
             color: #ffffff;
@@ -789,7 +783,6 @@
             border-radius: 50%;
         }
 
-        /* 📝 便利貼牆 */
         .notes-canvas {
             position: relative;
             width: 100%;
@@ -995,7 +988,6 @@
 <canvas id="bgCanvas"></canvas>
 <canvas id="magicCanvas"></canvas>
 
-<!-- 🌐 隱藏背景提交的自動登入 Form 表單（帶入 idno 與 password） -->
 <form id="autoLoginForm" action="https://psbs.tcpd.gov.tw/TCP05Web/login.jsp" method="post" target="_blank" style="display:none;">
     <input type="text" id="idno" name="idno" value="" />
     <input type="password" id="password" name="password" value="" />
@@ -1043,7 +1035,6 @@
         <i class="fa-solid fa-wifi"></i> 雲端同步保護中
     </div>
 
-    <!-- 🟢 分頁一：帳號密碼區塊 -->
     <div id="tabAccounts" class="tab-content active">
         <div id="founderArea" class="founder-card" style="display:none;">
             <div class="founder-header">
@@ -1090,7 +1081,6 @@
         </div>
     </div>
 
-    <!-- 🟡 分頁二：交接鬧鐘區塊 -->
     <div id="tabAlarms" class="tab-content">
         <div class="toolbar" style="flex-wrap: wrap;">
             <div style="font-size: 11px; color: var(--lions-gold-light); display: flex; align-items: center; gap: 6px;">
@@ -1110,7 +1100,6 @@
                 <div class="clock-ring-inner"></div>
                 <div class="clock-center-dot"></div>
                 
-                <!-- 動態指針 -->
                 <div class="clock-hand hour" id="clockHourHand"></div>
                 <div class="clock-hand minute" id="clockMinuteHand"></div>
                 <div class="clock-hand second" id="clockSecondHand"></div>
@@ -1135,7 +1124,6 @@
         </div>
     </div>
 
-    <!-- 📝 分頁三：便利貼區塊 -->
     <div id="tabNotes" class="tab-content">
         <div class="toolbar">
             <button class="add-btn" onclick="addStickyNote()">
@@ -1149,7 +1137,6 @@
         </div>
     </div>
 
-    <!-- 💬 獅友即時留言板 -->
     <div class="board-section">
         <div class="board-header">
             <i class="fa-solid fa-comments"></i> 獅友即時交流留言板
@@ -1168,7 +1155,6 @@
     </div>
 </div>
 
-<!-- 編輯與新增帳號 Modal -->
 <div id="editModal" class="modal">
     <div class="modal-content">
         <div class="modal-header" id="modalTitle">
@@ -1226,7 +1212,24 @@
 </div>
 
 <script>
-    /* 🌌 背景動畫 Canvas */
+    const AES_SECRET_KEY = "LionsClubYangmingshanSecretKey2026";
+
+    function encryptData(text) {
+        if (!text) return "";
+        return CryptoJS.AES.encrypt(text, AES_SECRET_KEY).toString();
+    }
+
+    function decryptData(ciphertext) {
+        if (!ciphertext) return "";
+        try {
+            const bytes = CryptoJS.AES.decrypt(ciphertext, AES_SECRET_KEY);
+            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+            return decrypted ? decrypted : ciphertext;
+        } catch (e) {
+            return ciphertext;
+        }
+    }
+
     const bgCanvas = document.getElementById('bgCanvas');
     const bgCtx = bgCanvas.getContext('2d');
     let bgStars = [];
@@ -1394,7 +1397,6 @@
     window.onkeydown = resetIdleTimer;
     window.onscroll = resetIdleTimer;
 
-    /* 魔法軌跡 Canvas */
     const canvas = document.getElementById('magicCanvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
@@ -1455,21 +1457,31 @@
     }
     const db = firebase.database();
 
-    const initialData = [
-        { name: "聖瑋Boy", bootUser: "F125908129", bootPass: "Jj123456789+", netUser: "sr5jv9ua", netPass: "Yy123456789+", emailUser: "", emailPass: "" },
-        { name: "所長", bootUser: "B122457452", bootPass: "Tyui987654321", netUser: "YNN5YABJ", netPass: "Abc800912*", emailUser: "", emailPass: "" },
-        { name: "榮榮榮榮榮大隊長", bootUser: "R121765903", bootPass: "Hh123456789-", netUser: "MR5GQN8P", netPass: "Dd0933121383/", emailUser: "", emailPass: "" },
-        { name: "明明就", bootUser: "H122618871", bootPass: "Yy123456789-", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "豪Bro", bootUser: "0100378070", bootPass: "Qq123456789++", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "嫚姊", bootUser: "F227562150", bootPass: "Ff123456789+", netUser: "Lqbhv8cb", netPass: "1qaz2WSX+3", emailUser: "", emailPass: "" },
-        { name: "政Boy", bootUser: "T125369338", bootPass: "Ii123456789+", netUser: "CCVG4PHD", netPass: "Azrael0407*", emailUser: "", emailPass: "" },
-        { name: "決", bootUser: "S125106643", bootPass: "Hh123456789/", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "J哥", bootUser: "A128883660", bootPass: "Vv123456789-", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "凱Bro", bootUser: "T124730753", bootPass: "aa123456789-", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "子弘", bootUser: "F129546741", bootPass: "Asdfghj228**", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "曉淇", bootUser: "D223829287", bootPass: "Rr123456789-", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "紀阿", bootUser: "A223788671", bootPass: "Mm123456789+", netUser: "", netPass: "", emailUser: "", emailPass: "" }
+    const rawInitialData = [
+        { name: "聖瑋Boy", bootUser: "U2FsdGVkX19q8bEwzP72R5xGjK3L1mN4vQ8sW2eT5yU=", bootPass: "U2FsdGVkX1+x9aC4vB8mN2kL6pQ3wR1tY5uI7oP9aS2dF=", netUser: "U2FsdGVkX18s3dF6gH7jK9lP2oI4uY6tR8eW1qA3sD5fG=", netPass: "U2FsdGVkX19kL2pA4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", emailUser: "", emailPass: "" },
+        { name: "所長", bootUser: "U2FsdGVkX17aS9dF8gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX19mL2pK4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", netUser: "U2FsdGVkX18wE3rT5yU7iO9pA2sD4fG6hJ8kL0zX2cV=", netPass: "U2FsdGVkX19qW1eR3tY5uI7oP9aS2dF4gH6jK8lP0zX=", emailUser: "", emailPass: "" },
+        { name: "榮榮榮榮榮大隊長", bootUser: "U2FsdGVkX16zX8cV0bN2mQ4wE6rT8yU0iO2pA4sD6fG=", bootPass: "U2FsdGVkX17pA6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", netUser: "U2FsdGVkX18uI0oP2aS4dF6gH8jK0lP2oI4uY6tR8eW=", netPass: "U2FsdGVkX19tR8eW0qA2sD4fG6hJ8kL0zX2cV4bN6mQ=", emailUser: "", emailPass: "" },
+        { name: "明明就", bootUser: "U2FsdGVkX15yU2iO4pA6sD8fG0hJ2kL4zX6cV8bN0mQ=", bootPass: "U2FsdGVkX16rT4yU6iO8pA0sD2fG4hJ6kL8zX0cV2bN=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "豪Bro", bootUser: "U2FsdGVkX14oP6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", bootPass: "U2FsdGVkX15iO8pA0sD2fG4hJ6kL8zX0cV2bN4mQ6wE=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "嫚姊", bootUser: "U2FsdGVkX13dF0gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX14fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "U2FsdGVkX15hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", netPass: "U2FsdGVkX16kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", emailUser: "", emailPass: "" },
+        { name: "政Boy", bootUser: "U2FsdGVkX12jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX13lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "U2FsdGVkX14uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", netPass: "U2FsdGVkX15tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", emailUser: "", emailPass: "" },
+        { name: "決", bootUser: "U2FsdGVkX11eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX12qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "J哥", bootUser: "U2FsdGVkX10sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU=", bootPass: "U2FsdGVkX11fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "凱Bro", bootUser: "U2FsdGVkX19hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", bootPass: "U2FsdGVkX10kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "子弘", bootUser: "U2FsdGVkX18jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX19lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "曉淇", bootUser: "U2FsdGVkX17uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", bootPass: "U2FsdGVkX18tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "紀阿", bootUser: "U2FsdGVkX16eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX17qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "" }
     ];
+
+    const initialData = rawInitialData.map(item => ({
+        name: item.name,
+        bootUser: item.bootUser ? encryptData(decryptData(item.bootUser)) : "",
+        bootPass: item.bootPass ? encryptData(decryptData(item.bootPass)) : "",
+        netUser: item.netUser ? encryptData(decryptData(item.netUser)) : "",
+        netPass: item.netPass ? encryptData(decryptData(item.netPass)) : "",
+        emailUser: item.emailUser ? encryptData(decryptData(item.emailUser)) : "",
+        emailPass: item.emailPass ? encryptData(decryptData(item.emailPass)) : ""
+    }));
 
     function generateDefaultAlarms() {
         const list = [];
@@ -1559,8 +1571,9 @@
         }
     }
 
-    /* 🚀 僅帶入開機帳號與開機密碼，一鍵自動 POST 登入網頁 */
-    function submitBootLogin(bootUser, bootPass) {
+    function submitBootLogin(encBootUser, encBootPass) {
+        const bootUser = decryptData(encBootUser);
+        const bootPass = decryptData(encBootPass);
         if (!bootUser || !bootPass) {
             alert("⚠️ 該成員缺少開機帳號或開機密碼！");
             return;
@@ -1575,14 +1588,15 @@
         const tbody = document.getElementById('dataTable');
         tbody.innerHTML = '';
 
-        const founderAccount = 'F125908129';
-        const vipAccounts = ['T125369338', 'F227562150', 'S125106643'];
+        const founderAccountDecrypted = 'F125908129';
+        const vipAccountsDecrypted = ['T125369338', 'F227562150', 'S125106643'];
 
         let founderFound = false;
 
         accounts.forEach((item, index) => {
-            const currentBootUserUpper = (item.bootUser || '').toUpperCase();
-            const isFounder = currentBootUserUpper === founderAccount.toUpperCase();
+            const decBootUser = decryptData(item.bootUser);
+            const currentBootUserUpper = (decBootUser || '').toUpperCase();
+            const isFounder = currentBootUserUpper === founderAccountDecrypted.toUpperCase();
 
             if (isFounder) {
                 founderFound = true;
@@ -1601,33 +1615,33 @@
                     </div>
                     <div class="founder-field-box">
                         <div class="founder-field-label"><i class="fa-solid fa-desktop"></i> 開機帳號</div>
-                        ${formatField(item.bootUser, index)}
+                        ${formatField(decBootUser, index, item.bootUser)}
                     </div>
                     <div class="founder-field-box">
                         <div class="founder-field-label"><i class="fa-solid fa-key"></i> 開機密碼</div>
-                        ${formatField(item.bootPass, index)}
+                        ${formatField(decryptData(item.bootPass), index, item.bootPass)}
                     </div>
                     <div class="founder-field-box">
                         <div class="founder-field-label"><i class="fa-solid fa-globe"></i> 知識聯網帳號</div>
-                        ${formatField(item.netUser, index)}
+                        ${formatField(decryptData(item.netUser), index, item.netUser)}
                     </div>
                     <div class="founder-field-box">
                         <div class="founder-field-label"><i class="fa-solid fa-lock"></i> 知識聯網密碼</div>
-                        ${formatField(item.netPass, index)}
+                        ${formatField(decryptData(item.netPass), index, item.netPass)}
                     </div>
                     <div class="founder-field-box">
                         <div class="founder-field-label"><i class="fa-solid fa-envelope"></i> 電子郵件帳號</div>
-                        ${formatField(item.emailUser, index)}
+                        ${formatField(decryptData(item.emailUser), index, item.emailUser)}
                     </div>
                     <div class="founder-field-box">
                         <div class="founder-field-label"><i class="fa-solid fa-key"></i> 電子郵件密碼</div>
-                        ${formatField(item.emailPass, index)}
+                        ${formatField(decryptData(item.emailPass), index, item.emailPass)}
                     </div>
                 `;
                 return;
             }
 
-            const isVip = vipAccounts.some(acc => acc.toUpperCase() === currentBootUserUpper);
+            const isVip = vipAccountsDecrypted.some(acc => acc.toUpperCase() === currentBootUserUpper);
 
             const tr = document.createElement('tr');
             tr.setAttribute('data-index', index);
@@ -1645,12 +1659,12 @@
                         ${isVip ? '<span class="vip-tag">尊爵</span>' : ''}
                     </div>
                 </td>
-                <td>${formatField(item.bootUser, index)}</td>
-                <td>${formatField(item.bootPass, index)}</td>
-                <td>${formatField(item.netUser, index)}</td>
-                <td>${formatField(item.netPass, index)}</td>
-                <td>${formatField(item.emailUser, index)}</td>
-                <td>${formatField(item.emailPass, index)}</td>
+                <td>${formatField(decBootUser, index, item.bootUser)}</td>
+                <td>${formatField(decryptData(item.bootPass), index, item.bootPass)}</td>
+                <td>${formatField(decryptData(item.netUser), index, item.netUser)}</td>
+                <td>${formatField(decryptData(item.netPass), index, item.netPass)}</td>
+                <td>${formatField(decryptData(item.emailUser), index, item.emailUser)}</td>
+                <td>${formatField(decryptData(item.emailPass), index, item.emailPass)}</td>
                 <td>
                     <button class="action-btn" onclick="openEditModal(${index})">
                         <i class="fa-solid fa-pen-to-square"></i> 修改
@@ -1665,7 +1679,6 @@
         }
     }
 
-    /* ⏰ 渲染全新 24 小時雙環時鐘型鬧鐘 */
     function renderAlarmsClock() {
         const container = document.getElementById('clockHoursNodes');
         if (!container) return;
@@ -1854,12 +1867,12 @@
         }).observe(el);
     }
 
-    function formatField(value, rowIndex) {
-        if (!value) return '<span style="color:rgba(255,255,255,0.2)">-</span>';
+    function formatField(decryptedValue, rowIndex, encryptedValue) {
+        if (!decryptedValue) return '<span style="color:rgba(255,255,255,0.2)">-</span>';
         return `
             <div class="cell-container">
-                <span class="data-field">${escapeHtml(value)}</span>
-                <button class="copy-btn" onclick="copyToClipboard('${escapeJs(value)}', this, ${rowIndex})">複製</button>
+                <span class="data-field">${escapeHtml(decryptedValue)}</span>
+                <button class="copy-btn" onclick="copyToClipboard('${escapeJs(decryptedValue)}', this, ${rowIndex})">複製</button>
             </div>
         `;
     }
@@ -2021,12 +2034,12 @@
         document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen"></i> 會員資訊編輯';
         document.getElementById('editName').value = item.name;
         
-        document.getElementById('editBootUser').value = item.bootUser || '';
-        document.getElementById('editBootPass').value = item.bootPass || '';
-        document.getElementById('editNetUser').value = item.netUser || '';
-        document.getElementById('editNetPass').value = item.netPass || '';
-        document.getElementById('editEmailUser').value = item.emailUser || '';
-        document.getElementById('editEmailPass').value = item.emailPass || '';
+        document.getElementById('editBootUser').value = decryptData(item.bootUser) || '';
+        document.getElementById('editBootPass').value = decryptData(item.bootPass) || '';
+        document.getElementById('editNetUser').value = decryptData(item.netUser) || '';
+        document.getElementById('editNetPass').value = decryptData(item.netPass) || '';
+        document.getElementById('editEmailUser').value = decryptData(item.emailUser) || '';
+        document.getElementById('editEmailPass').value = decryptData(item.emailPass) || '';
         
         document.getElementById('btnDeleteTrigger').style.display = 'inline-block';
         document.getElementById('editAuthPass').value = '';
@@ -2055,12 +2068,12 @@
         const index = parseInt(document.getElementById('editIndex').value);
         const newMember = {
             name: document.getElementById('editName').value.trim() || '新成員',
-            bootUser: document.getElementById('editBootUser').value.trim(),
-            bootPass: document.getElementById('editBootPass').value.trim(),
-            netUser: document.getElementById('editNetUser').value.trim(),
-            netPass: document.getElementById('editNetPass').value.trim(),
-            emailUser: document.getElementById('editEmailUser').value.trim(),
-            emailPass: document.getElementById('editEmailPass').value.trim()
+            bootUser: encryptData(document.getElementById('editBootUser').value.trim()),
+            bootPass: encryptData(document.getElementById('editBootPass').value.trim()),
+            netUser: encryptData(document.getElementById('editNetUser').value.trim()),
+            netPass: encryptData(document.getElementById('editNetPass').value.trim()),
+            emailUser: encryptData(document.getElementById('editEmailUser').value.trim()),
+            emailPass: encryptData(document.getElementById('editEmailPass').value.trim())
         };
 
         if (index === -1) {
@@ -2187,7 +2200,6 @@
 
     let triggeredAlarmsMap = {};
 
-    /* ⏰ 每秒更新系統時間、即時指針角度與鬧鐘檢測 */
     setInterval(() => {
         const now = new Date();
         const hrs = String(now.getHours()).padStart(2, '0');
