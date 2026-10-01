@@ -242,7 +242,7 @@
             margin-bottom: 14px;
             border-bottom: 1px solid var(--border-gold);
             padding-bottom: 10px;
-            padding-right: 140px;
+            padding-right: 180px;
             flex-wrap: wrap;
         }
 
@@ -322,6 +322,33 @@
             min-width: 36px;
             text-align: right;
             font-size: 12px;
+        }
+
+        .settings-gear-btn {
+            position: absolute;
+            top: 12px;
+            right: 215px;
+            background: rgba(0, 15, 30, 0.9);
+            border: 1px solid var(--lions-gold);
+            color: var(--lions-gold-light);
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            transition: all 0.3s;
+        }
+
+        .settings-gear-btn:hover {
+            background: var(--lions-gold);
+            color: #00101d;
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 0 15px rgba(243, 156, 18, 0.8);
         }
 
         .header-section {
@@ -951,7 +978,7 @@
 
         .form-group { margin-bottom: 10px; }
         .form-group label { display: block; margin-bottom: 3px; font-size: 11px; color: var(--lions-gold-light); }
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%; padding: 6px 10px; background: rgba(0, 14, 28, 0.9);
             border: 1px solid var(--border-gold); border-radius: 6px;
             color: #ffffff; font-size: 12px; outline: none;
@@ -1007,6 +1034,10 @@
 </div>
 
 <div id="mainContainer" class="container">
+    <div class="settings-gear-btn" onclick="openSettingsModal()" title="創會長系統設定">
+        <i class="fa-solid fa-gear"></i>
+    </div>
+
     <div class="top-right-controls">
         <i class="fa-solid fa-clock"></i>
         <span>閒置鎖定:</span>
@@ -1155,6 +1186,35 @@
     </div>
 </div>
 
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fa-solid fa-gear"></i> 創會長系統進階設定
+        </div>
+        <div id="settingsAuthStep">
+            <div class="form-group">
+                <label>請輸入創會長專屬密碼：</label>
+                <input type="password" id="settingsFounderPass" placeholder="請輸入密碼">
+                <div id="settingsAuthError" class="error-msg">密碼錯誤！</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" type="button" onclick="closeSettingsModal()">取消</button>
+                <button class="btn-primary" type="button" onclick="verifySettingsAuth()">驗證解鎖</button>
+            </div>
+        </div>
+        <div id="settingsActionStep" style="display:none;">
+            <div class="form-group">
+                <label>修改系統通行證密碼</label>
+                <input type="text" id="newAccessPassInput" placeholder="輸入新的通行證密碼">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" type="button" onclick="closeSettingsModal()">取消</button>
+                <button class="btn-primary" type="button" onclick="saveNewSettings()">儲存修改</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="editModal" class="modal">
     <div class="modal-content">
         <div class="modal-header" id="modalTitle">
@@ -1164,13 +1224,20 @@
         
         <div class="form-group" style="background: rgba(243, 156, 18, 0.15); padding: 8px; border-radius: 6px; margin-bottom: 10px;">
             <label id="authLabel" style="color: #ffeaa7; font-weight: bold;">授權驗證密碼：</label>
-            <input type="password" id="editAuthPass" placeholder="請輸入授權密碼 (5566)" style="border-color: var(--lions-gold);">
+            <input type="password" id="editAuthPass" placeholder="請輸入授權密碼" style="border-color: var(--lions-gold);">
             <div id="editAuthErrorMsg" class="error-msg">授權密碼錯誤，無法操作！</div>
         </div>
 
         <div class="form-group">
             <label>姓名</label>
             <input type="text" id="editName">
+        </div>
+        <div class="form-group">
+            <label>會員級別</label>
+            <select id="editVipStatus">
+                <option value="normal">一般會員</option>
+                <option value="vip">尊爵會員</option>
+            </select>
         </div>
         <div class="form-group">
             <label>開機帳號</label>
@@ -1213,6 +1280,7 @@
 
 <script>
     const AES_SECRET_KEY = "LionsClubYangmingshanSecretKey2026";
+    const ENCRYPTED_FOUNDER_PIN = CryptoJS.AES.encrypt("1986", AES_SECRET_KEY).toString();
 
     function encryptData(text) {
         if (!text) return "";
@@ -1227,6 +1295,16 @@
             return decrypted ? decrypted : ciphertext;
         } catch (e) {
             return ciphertext;
+        }
+    }
+
+    function verifyEncryptedPin(inputPin, encPin) {
+        try {
+            const bytes = CryptoJS.AES.decrypt(encPin, AES_SECRET_KEY);
+            const original = bytes.toString(CryptoJS.enc.Utf8);
+            return original === inputPin;
+        } catch(e) {
+            return false;
         }
     }
 
@@ -1332,6 +1410,7 @@
     let remainingSecs = idleTimeoutSecs;
     let countdownInterval = null;
     let isUnlocked = false;
+    let currentSystemPass = '5566';
 
     function updateIdleTimeoutSetting() {
         const select = document.getElementById('idleTimeoutSelect');
@@ -1458,23 +1537,24 @@
     const db = firebase.database();
 
     const rawInitialData = [
-        { name: "聖瑋Boy", bootUser: "U2FsdGVkX19q8bEwzP72R5xGjK3L1mN4vQ8sW2eT5yU=", bootPass: "U2FsdGVkX1+x9aC4vB8mN2kL6pQ3wR1tY5uI7oP9aS2dF=", netUser: "U2FsdGVkX18s3dF6gH7jK9lP2oI4uY6tR8eW1qA3sD5fG=", netPass: "U2FsdGVkX19kL2pA4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", emailUser: "", emailPass: "" },
-        { name: "所長", bootUser: "U2FsdGVkX17aS9dF8gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX19mL2pK4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", netUser: "U2FsdGVkX18wE3rT5yU7iO9pA2sD4fG6hJ8kL0zX2cV=", netPass: "U2FsdGVkX19qW1eR3tY5uI7oP9aS2dF4gH6jK8lP0zX=", emailUser: "", emailPass: "" },
-        { name: "榮榮榮榮榮大隊長", bootUser: "U2FsdGVkX16zX8cV0bN2mQ4wE6rT8yU0iO2pA4sD6fG=", bootPass: "U2FsdGVkX17pA6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", netUser: "U2FsdGVkX18uI0oP2aS4dF6gH8jK0lP2oI4uY6tR8eW=", netPass: "U2FsdGVkX19tR8eW0qA2sD4fG6hJ8kL0zX2cV4bN6mQ=", emailUser: "", emailPass: "" },
-        { name: "明明就", bootUser: "U2FsdGVkX15yU2iO4pA6sD8fG0hJ2kL4zX6cV8bN0mQ=", bootPass: "U2FsdGVkX16rT4yU6iO8pA0sD2fG4hJ6kL8zX0cV2bN=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "豪Bro", bootUser: "U2FsdGVkX14oP6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", bootPass: "U2FsdGVkX15iO8pA0sD2fG4hJ6kL8zX0cV2bN4mQ6wE=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "嫚姊", bootUser: "U2FsdGVkX13dF0gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX14fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "U2FsdGVkX15hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", netPass: "U2FsdGVkX16kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", emailUser: "", emailPass: "" },
-        { name: "政Boy", bootUser: "U2FsdGVkX12jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX13lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "U2FsdGVkX14uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", netPass: "U2FsdGVkX15tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", emailUser: "", emailPass: "" },
-        { name: "決", bootUser: "U2FsdGVkX11eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX12qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "J哥", bootUser: "U2FsdGVkX10sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU=", bootPass: "U2FsdGVkX11fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "凱Bro", bootUser: "U2FsdGVkX19hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", bootPass: "U2FsdGVkX10kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "子弘", bootUser: "U2FsdGVkX18jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX19lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "曉淇", bootUser: "U2FsdGVkX17uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", bootPass: "U2FsdGVkX18tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "紀阿", bootUser: "U2FsdGVkX16eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX17qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "" }
+        { name: "聖瑋Boy", vip: false, bootUser: "U2FsdGVkX19q8bEwzP72R5xGjK3L1mN4vQ8sW2eT5yU=", bootPass: "U2FsdGVkX1+x9aC4vB8mN2kL6pQ3wR1tY5uI7oP9aS2dF=", netUser: "U2FsdGVkX18s3dF6gH7jK9lP2oI4uY6tR8eW1qA3sD5fG=", netPass: "U2FsdGVkX19kL2pA4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", emailUser: "", emailPass: "" },
+        { name: "所長", vip: false, bootUser: "U2FsdGVkX17aS9dF8gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX19mL2pK4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", netUser: "U2FsdGVkX18wE3rT5yU7iO9pA2sD4fG6hJ8kL0zX2cV=", netPass: "U2FsdGVkX19qW1eR3tY5uI7oP9aS2dF4gH6jK8lP0zX=", emailUser: "", emailPass: "" },
+        { name: "榮榮榮榮榮大隊長", vip: false, bootUser: "U2FsdGVkX16zX8cV0bN2mQ4wE6rT8yU0iO2pA4sD6fG=", bootPass: "U2FsdGVkX17pA6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", netUser: "U2FsdGVkX18uI0oP2aS4dF6gH8jK0lP2oI4uY6tR8eW=", netPass: "U2FsdGVkX19tR8eW0qA2sD4fG6hJ8kL0zX2cV4bN6mQ=", emailUser: "", emailPass: "" },
+        { name: "明明就", vip: false, bootUser: "U2FsdGVkX15yU2iO4pA6sD8fG0hJ2kL4zX6cV8bN0mQ=", bootPass: "U2FsdGVkX16rT4yU6iO8pA0sD2fG4hJ6kL8zX0cV2bN=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "豪Bro", vip: false, bootUser: "U2FsdGVkX14oP6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", bootPass: "U2FsdGVkX15iO8pA0sD2fG4hJ6kL8zX0cV2bN4mQ6wE=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "嫚姊", vip: true, bootUser: "U2FsdGVkX13dF0gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX14fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "U2FsdGVkX15hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", netPass: "U2FsdGVkX16kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", emailUser: "", emailPass: "" },
+        { name: "政Boy", vip: true, bootUser: "U2FsdGVkX12jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX13lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "U2FsdGVkX14uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", netPass: "U2FsdGVkX15tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", emailUser: "", emailPass: "" },
+        { name: "決", vip: false, bootUser: "U2FsdGVkX11eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX12qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "J哥", vip: false, bootUser: "U2FsdGVkX10sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU=", bootPass: "U2FsdGVkX11fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "凱Bro", vip: true, bootUser: "U2FsdGVkX19hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", bootPass: "U2FsdGVkX10kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "子弘", vip: false, bootUser: "U2FsdGVkX18jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX19lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "曉淇", vip: false, bootUser: "U2FsdGVkX17uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", bootPass: "U2FsdGVkX18tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
+        { name: "紀阿", vip: false, bootUser: "U2FsdGVkX16eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX17qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "" }
     ];
 
     const initialData = rawInitialData.map(item => ({
         name: item.name,
+        vip: item.vip || false,
         bootUser: item.bootUser ? encryptData(decryptData(item.bootUser)) : "",
         bootPass: item.bootPass ? encryptData(decryptData(item.bootPass)) : "",
         netUser: item.netUser ? encryptData(decryptData(item.netUser)) : "",
@@ -1516,6 +1596,15 @@
         if (isUnlocked) renderTable();
     });
 
+    db.ref('systemPass').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            currentSystemPass = data;
+        } else {
+            db.ref('systemPass').set('5566');
+        }
+    });
+
     db.ref('alarms').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data && Array.isArray(data) && data.length === 24) {
@@ -1542,14 +1631,14 @@
     }
 
     function autoValidateAccess(val) {
-        if (val === '5566') {
+        if (val === currentSystemPass) {
             validateAccess();
         }
     }
 
     function validateAccess() {
         const pass = document.getElementById('accessPass').value;
-        if (pass === '5566') {
+        if (pass === currentSystemPass) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainContainer').style.display = 'block';
             document.getElementById('mainContainer').classList.remove('idle-blurred');
@@ -1584,13 +1673,52 @@
         form.submit();
     }
 
+    function openSettingsModal() {
+        document.getElementById('settingsFounderPass').value = '';
+        document.getElementById('settingsAuthError').style.display = 'none';
+        document.getElementById('settingsAuthStep').style.display = 'block';
+        document.getElementById('settingsActionStep').style.display = 'none';
+        document.getElementById('settingsModal').style.display = 'flex';
+    }
+
+    function closeSettingsModal() {
+        document.getElementById('settingsModal').style.display = 'none';
+    }
+
+    function verifySettingsAuth() {
+        const pin = document.getElementById('settingsFounderPass').value;
+        if (verifyEncryptedPin(pin, ENCRYPTED_FOUNDER_PIN)) {
+            document.getElementById('settingsAuthError').style.display = 'none';
+            document.getElementById('settingsAuthStep').style.display = 'none';
+            document.getElementById('settingsActionStep').style.display = 'block';
+            document.getElementById('newAccessPassInput').value = currentSystemPass;
+        } else {
+            document.getElementById('settingsAuthError').style.display = 'block';
+            document.getElementById('settingsFounderPass').value = '';
+            document.getElementById('settingsFounderPass').focus();
+        }
+    }
+
+    function saveNewSettings() {
+        const newPass = document.getElementById('newAccessPassInput').value.trim();
+        if (!newPass) {
+            alert("通行證密碼不能為空！");
+            return;
+        }
+        db.ref('systemPass').set(newPass).then(() => {
+            currentSystemPass = newPass;
+            alert("✅ 系統通行證密碼更新成功！");
+            closeSettingsModal();
+        }).catch(() => {
+            alert("更新失敗！");
+        });
+    }
+
     function renderTable() {
         const tbody = document.getElementById('dataTable');
         tbody.innerHTML = '';
 
         const founderAccountDecrypted = 'F125908129';
-        const vipAccountsDecrypted = ['T125369338', 'F227562150', 'S125106643'];
-
         let founderFound = false;
 
         accounts.forEach((item, index) => {
@@ -1641,7 +1769,7 @@
                 return;
             }
 
-            const isVip = vipAccountsDecrypted.some(acc => acc.toUpperCase() === currentBootUserUpper);
+            const isVip = item.vip === true;
 
             const tr = document.createElement('tr');
             tr.setAttribute('data-index', index);
@@ -1996,8 +2124,8 @@
     }
 
     function deleteComment(id) {
-        const pass = prompt('請輸入刪除留言授權碼 (5566)：');
-        if (pass === '5566') {
+        const pass = prompt('請輸入刪除留言授權碼：');
+        if (pass === currentSystemPass) {
             db.ref('comments/' + id).remove().catch(() => {
                 alert('刪除失敗！');
             });
@@ -2011,6 +2139,7 @@
         document.getElementById('editIndex').value = "-1";
         document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus"></i> 新增會員資訊';
         document.getElementById('editName').value = '';
+        document.getElementById('editVipStatus').value = 'normal';
         document.getElementById('editBootUser').value = '';
         document.getElementById('editBootPass').value = '';
         document.getElementById('editNetUser').value = '';
@@ -2020,7 +2149,7 @@
         
         document.getElementById('btnDeleteTrigger').style.display = 'none';
         document.getElementById('editAuthPass').value = '';
-        document.getElementById('editAuthPass').placeholder = '請輸入授權密碼 (5566)';
+        document.getElementById('editAuthPass').placeholder = '請輸入授權密碼';
         document.getElementById('authLabel').innerText = '授權驗證密碼：';
         document.getElementById('editAuthErrorMsg').style.display = 'none';
 
@@ -2033,6 +2162,7 @@
         document.getElementById('editIndex').value = index;
         document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen"></i> 會員資訊編輯';
         document.getElementById('editName').value = item.name;
+        document.getElementById('editVipStatus').value = item.vip ? 'vip' : 'normal';
         
         document.getElementById('editBootUser').value = decryptData(item.bootUser) || '';
         document.getElementById('editBootPass').value = decryptData(item.bootPass) || '';
@@ -2043,7 +2173,7 @@
         
         document.getElementById('btnDeleteTrigger').style.display = 'inline-block';
         document.getElementById('editAuthPass').value = '';
-        document.getElementById('editAuthPass').placeholder = '請輸入授權密碼 (5566)';
+        document.getElementById('editAuthPass').placeholder = '請輸入授權密碼';
         document.getElementById('authLabel').innerText = '授權驗證密碼：';
         document.getElementById('editAuthErrorMsg').style.display = 'none';
 
@@ -2057,8 +2187,8 @@
 
     function saveEdit() {
         const authPass = document.getElementById('editAuthPass').value;
-        if (authPass !== '5566') {
-            document.getElementById('editAuthErrorMsg').innerText = '儲存授權密碼錯誤 (需輸入5566)！';
+        if (authPass !== currentSystemPass) {
+            document.getElementById('editAuthErrorMsg').innerText = '儲存授權密碼錯誤！';
             document.getElementById('editAuthErrorMsg').style.display = 'block';
             document.getElementById('editAuthPass').value = '';
             document.getElementById('editAuthPass').focus();
@@ -2068,6 +2198,7 @@
         const index = parseInt(document.getElementById('editIndex').value);
         const newMember = {
             name: document.getElementById('editName').value.trim() || '新成員',
+            vip: document.getElementById('editVipStatus').value === 'vip',
             bootUser: encryptData(document.getElementById('editBootUser').value.trim()),
             bootPass: encryptData(document.getElementById('editBootPass').value.trim()),
             netUser: encryptData(document.getElementById('editNetUser').value.trim()),
@@ -2091,11 +2222,11 @@
 
     function showDeleteConfirmUI() {
         document.getElementById('authLabel').innerText = '創會長刪除授權密碼：';
-        document.getElementById('editAuthPass').placeholder = '請輸入刪除密碼 (創會長專用)';
+        document.getElementById('editAuthPass').placeholder = '請輸入刪除密碼';
         
         const authPass = document.getElementById('editAuthPass').value;
-        if (authPass !== '1986') {
-            document.getElementById('editAuthErrorMsg').innerText = '刪除授權密碼錯誤 (創會長專屬)！';
+        if (!verifyEncryptedPin(authPass, ENCRYPTED_FOUNDER_PIN)) {
+            document.getElementById('editAuthErrorMsg').innerText = '刪除授權密碼錯誤！';
             document.getElementById('editAuthErrorMsg').style.display = 'block';
             document.getElementById('editAuthPass').value = '';
             document.getElementById('editAuthPass').focus();
@@ -2109,7 +2240,7 @@
 
     function cancelDeleteUI() {
         document.getElementById('authLabel').innerText = '授權驗證密碼：';
-        document.getElementById('editAuthPass').placeholder = '請輸入授權密碼 (5566)';
+        document.getElementById('editAuthPass').placeholder = '請輸入授權密碼';
         document.getElementById('editAuthErrorMsg').style.display = 'none';
         document.getElementById('deleteConfirmBox').style.display = 'none';
         document.getElementById('normalModalActions').style.display = 'flex';
@@ -2117,7 +2248,7 @@
 
     function executeRealDelete() {
         const authPass = document.getElementById('editAuthPass').value;
-        if (authPass !== '1986') {
+        if (!verifyEncryptedPin(authPass, ENCRYPTED_FOUNDER_PIN)) {
             document.getElementById('editAuthErrorMsg').innerText = '刪除授權密碼錯誤！';
             document.getElementById('editAuthErrorMsg').style.display = 'block';
             cancelDeleteUI();
