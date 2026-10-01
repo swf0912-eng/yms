@@ -2178,7 +2178,11 @@
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
 
-            const speechText = "時間差不多囉";
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const speechText = `現在是${currentHour}點${currentMinute}分`;
+
             const utterance = new SpeechSynthesisUtterance(speechText);
             utterance.lang = 'zh-TW';
             utterance.rate = 0.95; 
