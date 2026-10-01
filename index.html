@@ -966,8 +966,10 @@
         .modal-content {
             background: rgba(0, 28, 52, 0.95);
             border: 2px solid var(--lions-gold); padding: 20px;
-            border-radius: 12px; width: 92%; max-width: 400px;
+            border-radius: 12px; width: 92%; max-width: 420px;
             box-shadow: 0 0 40px rgba(0,0,0,0.9), 0 0 20px rgba(243, 156, 18, 0.4);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-header {
@@ -1008,6 +1010,18 @@
         }
 
         .delete-confirm-box p { font-size: 12px; color: #ff6b81; margin-bottom: 8px; font-weight: bold; }
+        
+        .member-vip-manager-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 12, 24, 0.8);
+            border: 1px solid rgba(243, 156, 18, 0.3);
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -1207,9 +1221,15 @@
                 <label>修改系統通行證密碼</label>
                 <input type="text" id="newAccessPassInput" placeholder="輸入新的通行證密碼">
             </div>
+            
+            <div style="margin: 14px 0 6px 0; border-top: 1px dashed rgba(243, 156, 18, 0.4); padding-top: 10px;">
+                <label style="color: var(--lions-gold-light); font-weight: bold; margin-bottom: 8px; display: block;"><i class="fa-solid fa-crown"></i> 成員會員級別管理 (尊爵 / 一般)</label>
+                <div id="founderVipManagerList" style="max-height: 200px; overflow-y: auto; padding-right: 4px;"></div>
+            </div>
+
             <div class="modal-actions">
                 <button class="btn-secondary" type="button" onclick="closeSettingsModal()">取消</button>
-                <button class="btn-primary" type="button" onclick="saveNewSettings()">儲存修改</button>
+                <button class="btn-primary" type="button" onclick="saveNewSettings()">儲存全部設定</button>
             </div>
         </div>
     </div>
@@ -1231,13 +1251,6 @@
         <div class="form-group">
             <label>姓名</label>
             <input type="text" id="editName">
-        </div>
-        <div class="form-group">
-            <label>會員級別</label>
-            <select id="editVipStatus">
-                <option value="normal">一般會員</option>
-                <option value="vip">尊爵會員</option>
-            </select>
         </div>
         <div class="form-group">
             <label>開機帳號</label>
@@ -1692,11 +1705,30 @@
             document.getElementById('settingsAuthStep').style.display = 'none';
             document.getElementById('settingsActionStep').style.display = 'block';
             document.getElementById('newAccessPassInput').value = currentSystemPass;
+            renderFounderVipManagerList();
         } else {
             document.getElementById('settingsAuthError').style.display = 'block';
             document.getElementById('settingsFounderPass').value = '';
             document.getElementById('settingsFounderPass').focus();
         }
+    }
+
+    function renderFounderVipManagerList() {
+        const listDiv = document.getElementById('founderVipManagerList');
+        listDiv.innerHTML = '';
+        accounts.forEach((acc, idx) => {
+            const isVip = acc.vip === true;
+            const row = document.createElement('div');
+            row.className = 'member-vip-manager-row';
+            row.innerHTML = `
+                <span><i class="fa-solid fa-user"></i> ${escapeHtml(acc.name)}</span>
+                <select id="vipSelect_${idx}" style="width: 110px; padding: 3px 6px; background: rgba(0,20,36,0.9); color:#fff; border:1px solid var(--border-gold); border-radius:4px; font-size:11px;">
+                    <option value="normal" ${!isVip ? 'selected' : ''}>一般會員</option>
+                    <option value="vip" ${isVip ? 'selected' : ''}>尊爵會員</option>
+                </select>
+            `;
+            listDiv.appendChild(row);
+        });
     }
 
     function saveNewSettings() {
@@ -1705,10 +1737,22 @@
             alert("通行證密碼不能為空！");
             return;
         }
-        db.ref('systemPass').set(newPass).then(() => {
+
+        accounts.forEach((acc, idx) => {
+            const sel = document.getElementById(`vipSelect_${idx}`);
+            if (sel) {
+                acc.vip = (sel.value === 'vip');
+            }
+        });
+
+        Promise.all([
+            db.ref('systemPass').set(newPass),
+            db.ref('accounts').set(accounts)
+        ]).then(() => {
             currentSystemPass = newPass;
-            alert("✅ 系統通行證密碼更新成功！");
+            alert("✅ 創會長設定與通行證更新成功！");
             closeSettingsModal();
+            renderTable();
         }).catch(() => {
             alert("更新失敗！");
         });
@@ -2139,7 +2183,6 @@
         document.getElementById('editIndex').value = "-1";
         document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus"></i> 新增會員資訊';
         document.getElementById('editName').value = '';
-        document.getElementById('editVipStatus').value = 'normal';
         document.getElementById('editBootUser').value = '';
         document.getElementById('editBootPass').value = '';
         document.getElementById('editNetUser').value = '';
@@ -2162,7 +2205,6 @@
         document.getElementById('editIndex').value = index;
         document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen"></i> 會員資訊編輯';
         document.getElementById('editName').value = item.name;
-        document.getElementById('editVipStatus').value = item.vip ? 'vip' : 'normal';
         
         document.getElementById('editBootUser').value = decryptData(item.bootUser) || '';
         document.getElementById('editBootPass').value = decryptData(item.bootPass) || '';
@@ -2196,9 +2238,11 @@
         }
 
         const index = parseInt(document.getElementById('editIndex').value);
+        const existingVip = (index >= 0 && accounts[index]) ? accounts[index].vip : false;
+
         const newMember = {
             name: document.getElementById('editName').value.trim() || '新成員',
-            vip: document.getElementById('editVipStatus').value === 'vip',
+            vip: existingVip,
             bootUser: encryptData(document.getElementById('editBootUser').value.trim()),
             bootPass: encryptData(document.getElementById('editBootPass').value.trim()),
             netUser: encryptData(document.getElementById('editNetUser').value.trim()),
@@ -2208,6 +2252,7 @@
         };
 
         if (index === -1) {
+            newMember.vip = false;
             accounts.push(newMember);
         } else {
             accounts[index] = newMember;
