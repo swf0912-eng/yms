@@ -222,7 +222,7 @@
 
         .container {
             width: 100%;
-            max-width: 1400px;
+            max-width: 1100px;
             background: var(--card-bg);
             border: 1px solid var(--border-gold);
             border-radius: 14px;
@@ -686,6 +686,55 @@
 
         .action-btn:hover { background: rgba(243, 156, 18, 0.5); color: #ffffff; box-shadow: 0 0 10px rgba(243, 156, 18, 0.6); }
 
+        .expand-toggle-btn {
+            background: rgba(0, 240, 255, 0.15);
+            border: 1px solid #00f0ff;
+            color: #00f0ff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .expand-toggle-btn:hover {
+            background: #00f0ff;
+            color: #00101d;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+        }
+
+        .expandable-details-row {
+            background: rgba(0, 10, 22, 0.92) !important;
+            display: none;
+        }
+        .expandable-details-row td {
+            padding: 14px 20px !important;
+            border-bottom: 2px dashed var(--border-gold);
+        }
+
+        .sub-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .sub-field-box {
+            background: rgba(0, 18, 35, 0.9);
+            border: 1px solid rgba(243, 156, 18, 0.4);
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+        .sub-field-label {
+            font-size: 11px;
+            color: #ffeaa7;
+            margin-bottom: 6px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .clock-alarm-wrapper {
             display: flex;
             flex-direction: column;
@@ -1114,10 +1163,7 @@
                         <th><i class="fa-solid fa-user-check"></i> 姓名</th>
                         <th><i class="fa-solid fa-desktop"></i> 開機帳號</th>
                         <th><i class="fa-solid fa-key"></i> 開機密碼</th>
-                        <th><i class="fa-solid fa-globe"></i> 知識聯網帳號</th>
-                        <th><i class="fa-solid fa-lock"></i> 知識聯網密碼</th>
-                        <th><i class="fa-solid fa-envelope"></i> 電子郵件帳號</th>
-                        <th><i class="fa-solid fa-key"></i> 電子郵件密碼</th>
+                        <th><i class="fa-solid fa-chevron-down"></i> 進階欄位</th>
                         <th><i class="fa-solid fa-sliders"></i> 操作</th>
                     </tr>
                 </thead>
@@ -1759,6 +1805,18 @@
         });
     }
 
+    function toggleSubDetails(index) {
+        const detailRow = document.getElementById(`subDetails_${index}`);
+        const btn = document.getElementById(`expandBtn_${index}`);
+        if (detailRow.style.display === 'table-row') {
+            detailRow.style.display = 'none';
+            btn.innerHTML = '<i class="fa-solid fa-chevron-down"></i> 展開';
+        } else {
+            detailRow.style.display = 'table-row';
+            btn.innerHTML = '<i class="fa-solid fa-chevron-up"></i> 收合';
+        }
+    }
+
     function renderTable() {
         const tbody = document.getElementById('dataTable');
         tbody.innerHTML = '';
@@ -1834,10 +1892,11 @@
                 </td>
                 <td>${formatField(decBootUser, index, item.bootUser)}</td>
                 <td>${formatField(decryptData(item.bootPass), index, item.bootPass)}</td>
-                <td>${formatField(decryptData(item.netUser), index, item.netUser)}</td>
-                <td>${formatField(decryptData(item.netPass), index, item.netPass)}</td>
-                <td>${formatField(decryptData(item.emailUser), index, item.emailUser)}</td>
-                <td>${formatField(decryptData(item.emailPass), index, item.emailPass)}</td>
+                <td>
+                    <button class="expand-toggle-btn" id="expandBtn_${index}" onclick="toggleSubDetails(${index})">
+                        <i class="fa-solid fa-chevron-down"></i> 展開
+                    </button>
+                </td>
                 <td>
                     <button class="action-btn" onclick="openEditModal(${index})">
                         <i class="fa-solid fa-pen-to-square"></i> 修改
@@ -1845,6 +1904,33 @@
                 </td>
             `;
             tbody.appendChild(tr);
+
+            const detailTr = document.createElement('tr');
+            detailTr.id = `subDetails_${index}`;
+            detailTr.className = 'expandable-details-row';
+            detailTr.innerHTML = `
+                <td colspan="6">
+                    <div class="sub-details-grid">
+                        <div class="sub-field-box">
+                            <div class="sub-field-label"><i class="fa-solid fa-globe"></i> 知識聯網帳號</div>
+                            ${formatField(decryptData(item.netUser), index + '_netUser', item.netUser)}
+                        </div>
+                        <div class="sub-field-box">
+                            <div class="sub-field-label"><i class="fa-solid fa-lock"></i> 知識聯網密碼</div>
+                            ${formatField(decryptData(item.netPass), index + '_netPass', item.netPass)}
+                        </div>
+                        <div class="sub-field-box">
+                            <div class="sub-field-label"><i class="fa-solid fa-envelope"></i> 電子郵件帳號</div>
+                            ${formatField(decryptData(item.emailUser), index + '_emailUser', item.emailUser)}
+                        </div>
+                        <div class="sub-field-box">
+                            <div class="sub-field-label"><i class="fa-solid fa-key"></i> 電子郵件密碼</div>
+                            ${formatField(decryptData(item.emailPass), index + '_emailPass', item.emailPass)}
+                        </div>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(detailTr);
         });
 
         if (!founderFound) {
@@ -2045,7 +2131,7 @@
         return `
             <div class="cell-container">
                 <span class="data-field">${escapeHtml(decryptedValue)}</span>
-                <button class="copy-btn" onclick="copyToClipboard('${escapeJs(decryptedValue)}', this, ${rowIndex})">複製</button>
+                <button class="copy-btn" onclick="copyToClipboard('${escapeJs(decryptedValue)}', this, '${rowIndex}')">複製</button>
             </div>
         `;
     }
@@ -2102,11 +2188,16 @@
 
     function filterData() {
         const query = document.getElementById('searchInput').value.toLowerCase();
-        const rows = document.querySelectorAll('#dataTable tr');
+        const rows = document.querySelectorAll('#dataTable tr[data-index]');
         rows.forEach(row => {
             const index = row.getAttribute('data-index');
             const name = accounts[index].name.toLowerCase();
-            row.style.display = name.includes(query) ? '' : 'none';
+            const match = name.includes(query);
+            row.style.display = match ? '' : 'none';
+            const detailRow = document.getElementById(`subDetails_${index}`);
+            if (detailRow && !match) {
+                detailRow.style.display = 'none';
+            }
         });
     }
 
