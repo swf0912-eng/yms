@@ -572,7 +572,6 @@
             box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.9), 0 0 12px rgba(241, 196, 15, 0.6) !important;
         }
 
-        /* 褫奪公權反灰與流浪邊疆樣式 */
         tr.banned-member {
             filter: grayscale(90%) brightness(0.55);
             opacity: 0.65;
@@ -1161,9 +1160,14 @@
                     <span id="founderNameTitle">創會長專區</span>
                     <span class="founder-tag"><img src="https://media.giphy.com/media/26tknCqiYwe7XVSw0/giphy.gif" class="founder-gif">至高尊榮</span>
                 </div>
-                <button class="action-btn" id="founderEditBtn" style="background: rgba(255,215,0,0.3); border-color:#ffd700; color:#ffd700;">
-                    <i class="fa-solid fa-pen-to-square"></i> 修改創會長資訊
-                </button>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button class="expand-toggle-btn" id="founderExpandBtn" onclick="toggleFounderSubDetails()" style="background: rgba(255,215,0,0.2); border-color:#ffd700; color:#ffd700;">
+                        <i class="fa-solid fa-chevron-down"></i> 展開進階欄位
+                    </button>
+                    <button class="action-btn" id="founderEditBtn" style="background: rgba(255,215,0,0.3); border-color:#ffd700; color:#ffd700;">
+                        <i class="fa-solid fa-pen-to-square"></i> 修改
+                    </button>
+                </div>
             </div>
             <div class="founder-grid" id="founderGrid"></div>
         </div>
@@ -1855,6 +1859,18 @@
         }
     }
 
+    function toggleFounderSubDetails() {
+        const subGrid = document.getElementById('founderSubGrid');
+        const btn = document.getElementById('founderExpandBtn');
+        if (subGrid.style.display === 'grid') {
+            subGrid.style.display = 'none';
+            btn.innerHTML = '<i class="fa-solid fa-chevron-down"></i> 展開進階欄位';
+        } else {
+            subGrid.style.display = 'grid';
+            btn.innerHTML = '<i class="fa-solid fa-chevron-up"></i> 收合進階欄位';
+        }
+    }
+
     function renderTable() {
         const tbody = document.getElementById('dataTable');
         tbody.innerHTML = '';
@@ -1862,7 +1878,6 @@
         const founderAccountDecrypted = 'F125908129';
         let founderFound = false;
 
-        // 排序：非褫奪公權的在前面，褫奪公權的沉底流浪邊疆
         const sortedIndices = accounts.map((_, i) => i).sort((a, b) => {
             const roleA = accounts[a].role || 'normal';
             const roleB = accounts[b].role || 'normal';
@@ -1887,7 +1902,7 @@
 
                 const founderGrid = document.getElementById('founderGrid');
                 founderGrid.innerHTML = `
-                    <div class="founder-field-box" style="grid-column: span 2;">
+                    <div class="founder-field-box">
                         <button class="one-click-login-btn" style="width:100%; padding: 8px; font-size: 13px;" onclick="submitBootLogin('${escapeJs(item.bootUser)}', '${escapeJs(item.bootPass)}')">
                             <i class="fa-solid fa-arrow-right-to-bracket"></i> 創會長一鍵自動登入
                         </button>
@@ -1900,29 +1915,32 @@
                         <div class="founder-field-label"><i class="fa-solid fa-key"></i> 開機密碼</div>
                         ${formatField(decryptData(item.bootPass), index, item.bootPass)}
                     </div>
-                    <div class="founder-field-box">
-                        <div class="founder-field-label"><i class="fa-solid fa-globe"></i> 知識聯網帳號</div>
-                        ${formatField(decryptData(item.netUser), index, item.netUser)}
-                    </div>
-                    <div class="founder-field-box">
-                        <div class="founder-field-label"><i class="fa-solid fa-lock"></i> 知識聯網密碼</div>
-                        ${formatField(decryptData(item.netPass), index, item.netPass)}
-                    </div>
-                    <div class="founder-field-box">
-                        <div class="founder-field-label"><i class="fa-solid fa-envelope"></i> 電子郵件帳號</div>
-                        ${formatField(decryptData(item.emailUser), index, item.emailUser)}
-                    </div>
-                    <div class="founder-field-box">
-                        <div class="founder-field-label"><i class="fa-solid fa-key"></i> 電子郵件密碼</div>
-                        ${formatField(decryptData(item.emailPass), index, item.emailPass)}
-                    </div>
-                    <div class="founder-field-box">
-                        <div class="founder-field-label"><i class="fa-solid fa-video"></i> 監視器帳號</div>
-                        ${formatField(decryptData(item.camUser), index, item.camUser)}
-                    </div>
-                    <div class="founder-field-box">
-                        <div class="founder-field-label"><i class="fa-solid fa-key"></i> 監視器密碼</div>
-                        ${formatField(decryptData(item.camPass), index, item.camPass)}
+                    
+                    <div class="founder-grid" id="founderSubGrid" style="grid-column: 1 / -1; display: none; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 4px;">
+                        <div class="founder-field-box">
+                            <div class="founder-field-label"><i class="fa-solid fa-globe"></i> 知識聯網帳號</div>
+                            ${formatField(decryptData(item.netUser), index + '_netUser', item.netUser)}
+                        </div>
+                        <div class="founder-field-box">
+                            <div class="founder-field-label"><i class="fa-solid fa-lock"></i> 知識聯網密碼</div>
+                            ${formatField(decryptData(item.netPass), index + '_netPass', item.netPass)}
+                        </div>
+                        <div class="founder-field-box">
+                            <div class="founder-field-label"><i class="fa-solid fa-envelope"></i> 電子郵件帳號</div>
+                            ${formatField(decryptData(item.emailUser), index + '_emailUser', item.emailUser)}
+                        </div>
+                        <div class="founder-field-box">
+                            <div class="founder-field-label"><i class="fa-solid fa-key"></i> 電子郵件密碼</div>
+                            ${formatField(decryptData(item.emailPass), index + '_emailPass', item.emailPass)}
+                        </div>
+                        <div class="founder-field-box">
+                            <div class="founder-field-label"><i class="fa-solid fa-video"></i> 監視器帳號</div>
+                            ${formatField(decryptData(item.camUser), index + '_camUser', item.camUser)}
+                        </div>
+                        <div class="founder-field-box">
+                            <div class="founder-field-label"><i class="fa-solid fa-key"></i> 監視器密碼</div>
+                            ${formatField(decryptData(item.camPass), index + '_camPass', item.camPass)}
+                        </div>
                     </div>
                 `;
                 return;
