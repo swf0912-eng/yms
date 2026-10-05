@@ -715,7 +715,7 @@
 
         .sub-details-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 12px;
         }
 
@@ -1323,6 +1323,14 @@
             <label>電子郵件密碼</label>
             <input type="text" id="editEmailPass">
         </div>
+        <div class="form-group">
+            <label>監視器帳號</label>
+            <input type="text" id="editCamUser">
+        </div>
+        <div class="form-group">
+            <label>監視器密碼</label>
+            <input type="text" id="editCamPass">
+        </div>
 
         <div id="deleteConfirmBox" class="delete-confirm-box">
             <p>⚠️ 確定要徹底刪除此成員嗎？</p>
@@ -1597,19 +1605,19 @@
     const db = firebase.database();
 
     const rawInitialData = [
-        { name: "聖瑋Boy", vip: false, bootUser: "U2FsdGVkX19q8bEwzP72R5xGjK3L1mN4vQ8sW2eT5yU=", bootPass: "U2FsdGVkX1+x9aC4vB8mN2kL6pQ3wR1tY5uI7oP9aS2dF=", netUser: "U2FsdGVkX18s3dF6gH7jK9lP2oI4uY6tR8eW1qA3sD5fG=", netPass: "U2FsdGVkX19kL2pA4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", emailUser: "", emailPass: "" },
-        { name: "所長", vip: false, bootUser: "U2FsdGVkX17aS9dF8gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX19mL2pK4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", netUser: "U2FsdGVkX18wE3rT5yU7iO9pA2sD4fG6hJ8kL0zX2cV=", netPass: "U2FsdGVkX19qW1eR3tY5uI7oP9aS2dF4gH6jK8lP0zX=", emailUser: "", emailPass: "" },
-        { name: "榮榮榮榮榮大隊長", vip: false, bootUser: "U2FsdGVkX16zX8cV0bN2mQ4wE6rT8yU0iO2pA4sD6fG=", bootPass: "U2FsdGVkX17pA6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", netUser: "U2FsdGVkX18uI0oP2aS4dF6gH8jK0lP2oI4uY6tR8eW=", netPass: "U2FsdGVkX19tR8eW0qA2sD4fG6hJ8kL0zX2cV4bN6mQ=", emailUser: "", emailPass: "" },
-        { name: "明明就", vip: false, bootUser: "U2FsdGVkX15yU2iO4pA6sD8fG0hJ2kL4zX6cV8bN0mQ=", bootPass: "U2FsdGVkX16rT4yU6iO8pA0sD2fG4hJ6kL8zX0cV2bN=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "豪Bro", vip: false, bootUser: "U2FsdGVkX14oP6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", bootPass: "U2FsdGVkX15iO8pA0sD2fG4hJ6kL8zX0cV2bN4mQ6wE=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "嫚姊", vip: true, bootUser: "U2FsdGVkX13dF0gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX14fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "U2FsdGVkX15hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", netPass: "U2FsdGVkX16kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", emailUser: "", emailPass: "" },
-        { name: "政Boy", vip: true, bootUser: "U2FsdGVkX12jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX13lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "U2FsdGVkX14uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", netPass: "U2FsdGVkX15tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", emailUser: "", emailPass: "" },
-        { name: "決", vip: false, bootUser: "U2FsdGVkX11eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX12qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "J哥", vip: false, bootUser: "U2FsdGVkX10sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU=", bootPass: "U2FsdGVkX11fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "凱Bro", vip: true, bootUser: "U2FsdGVkX19hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", bootPass: "U2FsdGVkX10kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "子弘", vip: false, bootUser: "U2FsdGVkX18jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX19lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "曉淇", vip: false, bootUser: "U2FsdGVkX17uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", bootPass: "U2FsdGVkX18tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", netUser: "", netPass: "", emailUser: "", emailPass: "" },
-        { name: "紀阿", vip: false, bootUser: "U2FsdGVkX16eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX17qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "" }
+        { name: "聖瑋Boy", vip: false, bootUser: "U2FsdGVkX19q8bEwzP72R5xGjK3L1mN4vQ8sW2eT5yU=", bootPass: "U2FsdGVkX1+x9aC4vB8mN2kL6pQ3wR1tY5uI7oP9aS2dF=", netUser: "U2FsdGVkX18s3dF6gH7jK9lP2oI4uY6tR8eW1qA3sD5fG=", netPass: "U2FsdGVkX19kL2pA4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "所長", vip: false, bootUser: "U2FsdGVkX17aS9dF8gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX19mL2pK4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", netUser: "U2FsdGVkX18wE3rT5yU7iO9pA2sD4fG6hJ8kL0zX2cV=", netPass: "U2FsdGVkX19qW1eR3tY5uI7oP9aS2dF4gH6jK8lP0zX=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "榮榮榮榮榮大隊長", vip: false, bootUser: "U2FsdGVkX16zX8cV0bN2mQ4wE6rT8yU0iO2pA4sD6fG=", bootPass: "U2FsdGVkX17pA6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", netUser: "U2FsdGVkX18uI0oP2aS4dF6gH8jK0lP2oI4uY6tR8eW=", netPass: "U2FsdGVkX19tR8eW0qA2sD4fG6hJ8kL0zX2cV4bN6mQ=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "明明就", vip: false, bootUser: "U2FsdGVkX15yU2iO4pA6sD8fG0hJ2kL4zX6cV8bN0mQ=", bootPass: "U2FsdGVkX16rT4yU6iO8pA0sD2fG4hJ6kL8zX0cV2bN=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "豪Bro", vip: false, bootUser: "U2FsdGVkX14oP6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", bootPass: "U2FsdGVkX15iO8pA0sD2fG4hJ6kL8zX0cV2bN4mQ6wE=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "嫚姊", vip: true, bootUser: "U2FsdGVkX13dF0gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX14fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "U2FsdGVkX15hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", netPass: "U2FsdGVkX16kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "政Boy", vip: true, bootUser: "U2FsdGVkX12jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX13lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "U2FsdGVkX14uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", netPass: "U2FsdGVkX15tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "決", vip: false, bootUser: "U2FsdGVkX11eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX12qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "J哥", vip: false, bootUser: "U2FsdGVkX10sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU=", bootPass: "U2FsdGVkX11fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "凱Bro", vip: true, bootUser: "U2FsdGVkX19hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", bootPass: "U2FsdGVkX10kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "子弘", vip: false, bootUser: "U2FsdGVkX18jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX19lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "曉淇", vip: false, bootUser: "U2FsdGVkX17uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", bootPass: "U2FsdGVkX18tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "紀阿", vip: false, bootUser: "U2FsdGVkX16eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX17qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" }
     ];
 
     const initialData = rawInitialData.map(item => ({
@@ -1620,7 +1628,9 @@
         netUser: item.netUser ? encryptData(decryptData(item.netUser)) : "",
         netPass: item.netPass ? encryptData(decryptData(item.netPass)) : "",
         emailUser: item.emailUser ? encryptData(decryptData(item.emailUser)) : "",
-        emailPass: item.emailPass ? encryptData(decryptData(item.emailPass)) : ""
+        emailPass: item.emailPass ? encryptData(decryptData(item.emailPass)) : "",
+        camUser: item.camUser ? encryptData(decryptData(item.camUser)) : "",
+        camPass: item.camPass ? encryptData(decryptData(item.camPass)) : ""
     }));
 
     function generateDefaultAlarms() {
@@ -1724,7 +1734,7 @@
         const bootUser = decryptData(encBootUser);
         const bootPass = decryptData(encBootPass);
         if (!bootUser || !bootPass) {
-            alert("⚠️ 該成員缺少開機帳號或開機密碼！");
+            alert("⚠️️ 該成員缺少開機帳號或開機密碼！");
             return;
         }
         const form = document.getElementById('autoLoginForm');
@@ -1868,6 +1878,14 @@
                         <div class="founder-field-label"><i class="fa-solid fa-key"></i> 電子郵件密碼</div>
                         ${formatField(decryptData(item.emailPass), index, item.emailPass)}
                     </div>
+                    <div class="founder-field-box">
+                        <div class="founder-field-label"><i class="fa-solid fa-video"></i> 監視器帳號</div>
+                        ${formatField(decryptData(item.camUser), index, item.camUser)}
+                    </div>
+                    <div class="founder-field-box">
+                        <div class="founder-field-label"><i class="fa-solid fa-key"></i> 監視器密碼</div>
+                        ${formatField(decryptData(item.camPass), index, item.camPass)}
+                    </div>
                 `;
                 return;
             }
@@ -1926,6 +1944,14 @@
                         <div class="sub-field-box">
                             <div class="sub-field-label"><i class="fa-solid fa-key"></i> 電子郵件密碼</div>
                             ${formatField(decryptData(item.emailPass), index + '_emailPass', item.emailPass)}
+                        </div>
+                        <div class="sub-field-box">
+                            <div class="sub-field-label"><i class="fa-solid fa-video"></i> 監視器帳號</div>
+                            ${formatField(decryptData(item.camUser), index + '_camUser', item.camUser)}
+                        </div>
+                        <div class="sub-field-box">
+                            <div class="sub-field-label"><i class="fa-solid fa-key"></i> 監視器密碼</div>
+                            ${formatField(decryptData(item.camPass), index + '_camPass', item.camPass)}
                         </div>
                     </div>
                 </td>
@@ -2281,6 +2307,8 @@
         document.getElementById('editNetPass').value = '';
         document.getElementById('editEmailUser').value = '';
         document.getElementById('editEmailPass').value = '';
+        document.getElementById('editCamUser').value = '';
+        document.getElementById('editCamPass').value = '';
         
         document.getElementById('btnDeleteTrigger').style.display = 'none';
         document.getElementById('editAuthPass').value = '';
@@ -2304,6 +2332,8 @@
         document.getElementById('editNetPass').value = decryptData(item.netPass) || '';
         document.getElementById('editEmailUser').value = decryptData(item.emailUser) || '';
         document.getElementById('editEmailPass').value = decryptData(item.emailPass) || '';
+        document.getElementById('editCamUser').value = decryptData(item.camUser) || '';
+        document.getElementById('editCamPass').value = decryptData(item.camPass) || '';
         
         document.getElementById('btnDeleteTrigger').style.display = 'inline-block';
         document.getElementById('editAuthPass').value = '';
@@ -2340,7 +2370,9 @@
             netUser: encryptData(document.getElementById('editNetUser').value.trim()),
             netPass: encryptData(document.getElementById('editNetPass').value.trim()),
             emailUser: encryptData(document.getElementById('editEmailUser').value.trim()),
-            emailPass: encryptData(document.getElementById('editEmailPass').value.trim())
+            emailPass: encryptData(document.getElementById('editEmailPass').value.trim()),
+            camUser: encryptData(document.getElementById('editCamUser').value.trim()),
+            camPass: encryptData(document.getElementById('editCamPass').value.trim())
         };
 
         if (index === -1) {
