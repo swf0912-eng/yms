@@ -572,6 +572,16 @@
             box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.9), 0 0 12px rgba(241, 196, 15, 0.6) !important;
         }
 
+        /* 褫奪公權反灰與流浪邊疆樣式 */
+        tr.banned-member {
+            filter: grayscale(90%) brightness(0.55);
+            opacity: 0.65;
+        }
+        tr.banned-member:hover {
+            filter: grayscale(50%) brightness(0.8);
+            opacity: 0.9;
+        }
+
         .vip-tag {
             background: linear-gradient(135deg, #ffeaa7, #f39c12);
             color: #00101d;
@@ -582,6 +592,19 @@
             margin-left: 5px;
             letter-spacing: 0.5px;
             box-shadow: 0 0 8px rgba(241, 196, 15, 0.9);
+        }
+
+        .banned-tag {
+            background: linear-gradient(135deg, #747d8c, #2f3542);
+            color: #ff4757;
+            font-size: 9px;
+            font-weight: 900;
+            padding: 2px 5px;
+            border-radius: 4px;
+            margin-left: 5px;
+            letter-spacing: 0.5px;
+            border: 1px solid #ff4757;
+            box-shadow: 0 0 8px rgba(255, 71, 87, 0.5);
         }
 
         .founder-tag {
@@ -1270,7 +1293,7 @@
             </div>
             
             <div style="margin: 14px 0 6px 0; border-top: 1px dashed rgba(243, 156, 18, 0.4); padding-top: 10px;">
-                <label style="color: var(--lions-gold-light); font-weight: bold; margin-bottom: 8px; display: block;"><i class="fa-solid fa-crown"></i> 成員會員級別管理 (尊爵 / 一般)</label>
+                <label style="color: var(--lions-gold-light); font-weight: bold; margin-bottom: 8px; display: block;"><i class="fa-solid fa-crown"></i> 成員會員級別管理 (一般 / 尊爵 / 褫奪公權)</label>
                 <div id="founderVipManagerList" style="max-height: 200px; overflow-y: auto; padding-right: 4px;"></div>
             </div>
 
@@ -1605,24 +1628,24 @@
     const db = firebase.database();
 
     const rawInitialData = [
-        { name: "聖瑋Boy", vip: false, bootUser: "U2FsdGVkX19q8bEwzP72R5xGjK3L1mN4vQ8sW2eT5yU=", bootPass: "U2FsdGVkX1+x9aC4vB8mN2kL6pQ3wR1tY5uI7oP9aS2dF=", netUser: "U2FsdGVkX18s3dF6gH7jK9lP2oI4uY6tR8eW1qA3sD5fG=", netPass: "U2FsdGVkX19kL2pA4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
-        { name: "所長", vip: false, bootUser: "U2FsdGVkX17aS9dF8gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX19mL2pK4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", netUser: "U2FsdGVkX18wE3rT5yU7iO9pA2sD4fG6hJ8kL0zX2cV=", netPass: "U2FsdGVkX19qW1eR3tY5uI7oP9aS2dF4gH6jK8lP0zX=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
-        { name: "榮榮榮榮榮大隊長", vip: false, bootUser: "U2FsdGVkX16zX8cV0bN2mQ4wE6rT8yU0iO2pA4sD6fG=", bootPass: "U2FsdGVkX17pA6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", netUser: "U2FsdGVkX18uI0oP2aS4dF6gH8jK0lP2oI4uY6tR8eW=", netPass: "U2FsdGVkX19tR8eW0qA2sD4fG6hJ8kL0zX2cV4bN6mQ=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
-        { name: "明明就", vip: false, bootUser: "U2FsdGVkX15yU2iO4pA6sD8fG0hJ2kL4zX6cV8bN0mQ=", bootPass: "U2FsdGVkX16rT4yU6iO8pA0sD2fG4hJ6kL8zX0cV2bN=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
-        { name: "豪Bro", vip: false, bootUser: "U2FsdGVkX14oP6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", bootPass: "U2FsdGVkX15iO8pA0sD2fG4hJ6kL8zX0cV2bN4mQ6wE=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
-        { name: "嫚姊", vip: true, bootUser: "U2FsdGVkX13dF0gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX14fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "U2FsdGVkX15hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", netPass: "U2FsdGVkX16kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
-        { name: "政Boy", vip: true, bootUser: "U2FsdGVkX12jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX13lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "U2FsdGVkX14uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", netPass: "U2FsdGVkX15tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
-        { name: "決", vip: false, bootUser: "U2FsdGVkX11eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX12qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
-        { name: "J哥", vip: false, bootUser: "U2FsdGVkX10sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU=", bootPass: "U2FsdGVkX11fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
-        { name: "凱Bro", vip: true, bootUser: "U2FsdGVkX19hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", bootPass: "U2FsdGVkX10kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
-        { name: "子弘", vip: false, bootUser: "U2FsdGVkX18jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX19lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
-        { name: "曉淇", vip: false, bootUser: "U2FsdGVkX17uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", bootPass: "U2FsdGVkX18tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
-        { name: "紀阿", vip: false, bootUser: "U2FsdGVkX16eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX17qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" }
+        { name: "聖瑋Boy", role: "normal", bootUser: "U2FsdGVkX19q8bEwzP72R5xGjK3L1mN4vQ8sW2eT5yU=", bootPass: "U2FsdGVkX1+x9aC4vB8mN2kL6pQ3wR1tY5uI7oP9aS2dF=", netUser: "U2FsdGVkX18s3dF6gH7jK9lP2oI4uY6tR8eW1qA3sD5fG=", netPass: "U2FsdGVkX19kL2pA4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "所長", role: "normal", bootUser: "U2FsdGVkX17aS9dF8gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX19mL2pK4sD6fG8hJ0kL2zX4cV6bN8mQ1wE=", netUser: "U2FsdGVkX18wE3rT5yU7iO9pA2sD4fG6hJ8kL0zX2cV=", netPass: "U2FsdGVkX19qW1eR3tY5uI7oP9aS2dF4gH6jK8lP0zX=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "榮榮榮榮榮大隊長", role: "normal", bootUser: "U2FsdGVkX16zX8cV0bN2mQ4wE6rT8yU0iO2pA4sD6fG=", bootPass: "U2FsdGVkX17pA6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", netUser: "U2FsdGVkX18uI0oP2aS4dF6gH8jK0lP2oI4uY6tR8eW=", netPass: "U2FsdGVkX19tR8eW0qA2sD4fG6hJ8kL0zX2cV4bN6mQ=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "明明就", role: "normal", bootUser: "U2FsdGVkX15yU2iO4pA6sD8fG0hJ2kL4zX6cV8bN0mQ=", bootPass: "U2FsdGVkX16rT4yU6iO8pA0sD2fG4hJ6kL8zX0cV2bN=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "豪Bro", role: "normal", bootUser: "U2FsdGVkX14oP6sD8fG0hJ2kL4zX6cV8bN0mQ2wE4rT=", bootPass: "U2FsdGVkX15iO8pA0sD2fG4hJ6kL8zX0cV2bN4mQ6wE=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "嫚姊", role: "vip", bootUser: "U2FsdGVkX13dF0gH2jK4lP6oI8uY0tR2eW4qA6sD8fG=", bootPass: "U2FsdGVkX14fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "U2FsdGVkX15hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", netPass: "U2FsdGVkX16kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "政Boy", role: "vip", bootUser: "U2FsdGVkX12jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX13lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "U2FsdGVkX14uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", netPass: "U2FsdGVkX15tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "決", role: "normal", bootUser: "U2FsdGVkX11eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX12qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "J哥", role: "normal", bootUser: "U2FsdGVkX10sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU=", bootPass: "U2FsdGVkX11fG2hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "凱Bro", role: "vip", bootUser: "U2FsdGVkX19hJ4kL6zX8cV0bN2mQ4wE6rT8yU0iO2pA=", bootPass: "U2FsdGVkX10kL8zX0cV2bN4mQ6wE8rT0yU2iO4pA6sD=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "子弘", role: "normal", bootUser: "U2FsdGVkX18jK6lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL=", bootPass: "U2FsdGVkX19lP8oI0uY2tR4eW6qA8sD0fG2hJ4kL6zX=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "曉淇", role: "normal", bootUser: "U2FsdGVkX17uY2tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN=", bootPass: "U2FsdGVkX18tR4eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" },
+        { name: "紀阿", role: "normal", bootUser: "U2FsdGVkX16eW6qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE=", bootPass: "U2FsdGVkX17qA8sD0fG2hJ4kL6zX8cV0bN2mQ4wE6rT=", netUser: "", netPass: "", emailUser: "", emailPass: "", camUser: "", camPass: "" }
     ];
 
     const initialData = rawInitialData.map(item => ({
         name: item.name,
-        vip: item.vip || false,
+        role: item.role || (item.vip ? 'vip' : 'normal'),
         bootUser: item.bootUser ? encryptData(decryptData(item.bootUser)) : "",
         bootPass: item.bootPass ? encryptData(decryptData(item.bootPass)) : "",
         netUser: item.netUser ? encryptData(decryptData(item.netUser)) : "",
@@ -1659,7 +1682,10 @@
     db.ref('accounts').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            accounts = data;
+            accounts = data.map(item => ({
+                ...item,
+                role: item.role || (item.vip ? 'vip' : 'normal')
+            }));
         } else {
             db.ref('accounts').set(initialData);
         }
@@ -1734,7 +1760,7 @@
         const bootUser = decryptData(encBootUser);
         const bootPass = decryptData(encBootPass);
         if (!bootUser || !bootPass) {
-            alert("⚠️️ 該成員缺少開機帳號或開機密碼！");
+            alert("⚠️ 該成員缺少開機帳號或開機密碼！");
             return;
         }
         const form = document.getElementById('autoLoginForm');
@@ -1774,14 +1800,15 @@
         const listDiv = document.getElementById('founderVipManagerList');
         listDiv.innerHTML = '';
         accounts.forEach((acc, idx) => {
-            const isVip = acc.vip === true;
+            const role = acc.role || 'normal';
             const row = document.createElement('div');
             row.className = 'member-vip-manager-row';
             row.innerHTML = `
                 <span><i class="fa-solid fa-user"></i> ${escapeHtml(acc.name)}</span>
-                <select id="vipSelect_${idx}" style="width: 110px; padding: 3px 6px; background: rgba(0,20,36,0.9); color:#fff; border:1px solid var(--border-gold); border-radius:4px; font-size:11px;">
-                    <option value="normal" ${!isVip ? 'selected' : ''}>一般會員</option>
-                    <option value="vip" ${isVip ? 'selected' : ''}>尊爵會員</option>
+                <select id="roleSelect_${idx}" style="width: 120px; padding: 3px 6px; background: rgba(0,20,36,0.9); color:#fff; border:1px solid var(--border-gold); border-radius:4px; font-size:11px;">
+                    <option value="normal" ${role === 'normal' ? 'selected' : ''}>一般會員</option>
+                    <option value="vip" ${role === 'vip' ? 'selected' : ''}>尊爵會員</option>
+                    <option value="banned" ${role === 'banned' ? 'selected' : ''}>褫奪公權</option>
                 </select>
             `;
             listDiv.appendChild(row);
@@ -1796,8 +1823,9 @@
         }
 
         accounts.forEach((acc, idx) => {
-            const sel = document.getElementById(`vipSelect_${idx}`);
+            const sel = document.getElementById(`roleSelect_${idx}`);
             if (sel) {
+                acc.role = sel.value;
                 acc.vip = (sel.value === 'vip');
             }
         });
@@ -1834,7 +1862,17 @@
         const founderAccountDecrypted = 'F125908129';
         let founderFound = false;
 
-        accounts.forEach((item, index) => {
+        // 排序：非褫奪公權的在前面，褫奪公權的沉底流浪邊疆
+        const sortedIndices = accounts.map((_, i) => i).sort((a, b) => {
+            const roleA = accounts[a].role || 'normal';
+            const roleB = accounts[b].role || 'normal';
+            if (roleA === 'banned' && roleB !== 'banned') return 1;
+            if (roleA !== 'banned' && roleB === 'banned') return -1;
+            return 0;
+        });
+
+        sortedIndices.forEach((index) => {
+            const item = accounts[index];
             const decBootUser = decryptData(item.bootUser);
             const currentBootUserUpper = (decBootUser || '').toUpperCase();
             const isFounder = currentBootUserUpper === founderAccountDecrypted.toUpperCase();
@@ -1890,10 +1928,15 @@
                 return;
             }
 
-            const isVip = item.vip === true;
+            const role = item.role || 'normal';
+            const isVip = role === 'vip';
+            const isBanned = role === 'banned';
 
             const tr = document.createElement('tr');
             tr.setAttribute('data-index', index);
+            if (isBanned) {
+                tr.classList.add('banned-member');
+            }
 
             tr.innerHTML = `
                 <td>
@@ -1903,9 +1946,10 @@
                 </td>
                 <td>
                     <div class="member-name">
-                        <i class="${isVip ? 'fa-solid fa-crown' : 'fa-solid fa-shield'}" style="${isVip ? 'color:#f1c40f;' : ''}"></i> 
+                        <i class="${isBanned ? 'fa-solid fa-skull' : (isVip ? 'fa-solid fa-crown' : 'fa-solid fa-shield')}" style="${isVip ? 'color:#f1c40f;' : (isBanned ? 'color:#ff4757;' : '')}"></i> 
                         ${item.name}
                         ${isVip ? '<span class="vip-tag">尊爵</span>' : ''}
+                        ${isBanned ? '<span class="banned-tag"><i class="fa-solid fa-skull"></i> 褫奪公權</span>' : ''}
                     </div>
                 </td>
                 <td>${formatField(decBootUser, index, item.bootUser)}</td>
@@ -2360,11 +2404,12 @@
         }
 
         const index = parseInt(document.getElementById('editIndex').value);
-        const existingVip = (index >= 0 && accounts[index]) ? accounts[index].vip : false;
+        const existingRole = (index >= 0 && accounts[index]) ? (accounts[index].role || 'normal') : 'normal';
 
         const newMember = {
             name: document.getElementById('editName').value.trim() || '新成員',
-            vip: existingVip,
+            role: existingRole,
+            vip: existingRole === 'vip',
             bootUser: encryptData(document.getElementById('editBootUser').value.trim()),
             bootPass: encryptData(document.getElementById('editBootPass').value.trim()),
             netUser: encryptData(document.getElementById('editNetUser').value.trim()),
@@ -2376,6 +2421,7 @@
         };
 
         if (index === -1) {
+            newMember.role = 'normal';
             newMember.vip = false;
             accounts.push(newMember);
         } else {
