@@ -114,8 +114,8 @@
             background: rgba(28, 28, 32, 0.75);
             border: 1px solid var(--ios-glass-border);
             border-radius: 28px;
-            padding: 40px 30px;
-            max-width: 400px;
+            padding: 32px 24px;
+            max-width: 380px;
             width: 92%;
             text-align: center;
             box-shadow: var(--ios-shadow), var(--ios-glow);
@@ -132,9 +132,9 @@
         }
 
         .login-card .lions-logo {
-            font-size: 54px;
+            font-size: 48px;
             color: var(--ios-gold);
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             filter: drop-shadow(0 0 16px rgba(245, 166, 35, 0.5));
             animation: pulseCrown 2.5s infinite ease-in-out;
         }
@@ -145,29 +145,30 @@
         }
 
         .login-card h2 {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
             color: #ffffff;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             letter-spacing: 0.5px;
         }
 
         .login-card p {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--ios-text-secondary);
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             letter-spacing: 1.5px;
             text-transform: uppercase;
         }
 
         .login-form input {
             width: 100%;
-            padding: 14px 18px;
+            padding: 12px 16px;
             background: rgba(0, 0, 0, 0.35);
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 14px;
             color: #ffffff;
-            font-size: 16px;
+            font-size: 18px;
+            letter-spacing: 3px;
             text-align: center;
             outline: none;
             margin-bottom: 16px;
@@ -180,15 +181,63 @@
             box-shadow: 0 0 0 4px rgba(245, 166, 35, 0.25), inset 0 2px 4px rgba(0,0,0,0.5);
         }
 
+        /* iOS 毛玻璃數字鍵盤樣式 */
+        .numpad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 0 10px;
+        }
+
+        .num-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--ios-glass-border);
+            border-radius: 50%;
+            width: 62px;
+            height: 62px;
+            margin: 0 auto;
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            user-select: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .num-btn:active {
+            background: rgba(245, 166, 35, 0.4);
+            border-color: var(--ios-gold);
+            transform: scale(0.92);
+            box-shadow: 0 0 15px rgba(245, 166, 35, 0.5);
+        }
+
+        .num-btn.fn-btn {
+            font-size: 13px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--ios-text-secondary);
+        }
+
+        .num-btn.fn-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
         .login-btn {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             background: linear-gradient(135deg, #f5a623, #d97706);
             border: none;
             border-radius: 14px;
             color: #000000;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
             letter-spacing: 0.5px;
             box-shadow: 0 8px 20px rgba(245, 166, 35, 0.35);
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1086,7 +1135,24 @@
         <h2 id="loginTitle">獅子會陽明山分會</h2>
         <p id="loginSubtitle">LIONS CLUB OF YANGMINGSHAN</p>
         <div class="login-form">
-            <input type="password" id="accessPass" placeholder="請輸入通行證" oninput="autoValidateAccess(this.value)" onkeydown="checkEnter(event)">
+            <input type="password" id="accessPass" placeholder="請輸入通行證" oninput="autoValidateAccess(this.value)" onkeydown="checkEnter(event)" readonly>
+            
+            <!-- 毛玻璃數字鍵盤 (Numpad) -->
+            <div class="numpad-grid">
+                <button type="button" class="num-btn" onclick="pressNum('1')">1</button>
+                <button type="button" class="num-btn" onclick="pressNum('2')">2</button>
+                <button type="button" class="num-btn" onclick="pressNum('3')">3</button>
+                <button type="button" class="num-btn" onclick="pressNum('4')">4</button>
+                <button type="button" class="num-btn" onclick="pressNum('5')">5</button>
+                <button type="button" class="num-btn" onclick="pressNum('6')">6</button>
+                <button type="button" class="num-btn" onclick="pressNum('7')">7</button>
+                <button type="button" class="num-btn" onclick="pressNum('8')">8</button>
+                <button type="button" class="num-btn" onclick="pressNum('9')">9</button>
+                <button type="button" class="num-btn fn-btn" onclick="clearNum()">清除</button>
+                <button type="button" class="num-btn" onclick="pressNum('0')">0</button>
+                <button type="button" class="num-btn fn-btn" onclick="deleteNum()"><i class="fa-solid fa-backspace"></i></button>
+            </div>
+
             <button class="login-btn" onclick="validateAccess()">進入系統</button>
             <div id="errorMsg" class="error-msg">驗證失敗，請重新輸入</div>
         </div>
@@ -1537,6 +1603,38 @@
         document.getElementById('loginOverlay').style.display = 'flex';
     }
 
+    // 數字鍵盤功能
+    function pressNum(num) {
+        const input = document.getElementById('accessPass');
+        input.value += num;
+        autoValidateAccess(input.value);
+    }
+
+    function deleteNum() {
+        const input = document.getElementById('accessPass');
+        input.value = input.value.slice(0, -1);
+        autoValidateAccess(input.value);
+    }
+
+    function clearNum() {
+        const input = document.getElementById('accessPass');
+        input.value = '';
+        document.getElementById('errorMsg').style.display = 'none';
+    }
+
+    // 監聽實體鍵盤數字鍵輸入
+    document.addEventListener('keydown', function(e) {
+        if (document.getElementById('loginOverlay').style.display !== 'none') {
+            if (e.key >= '0' && e.key <= '9') {
+                pressNum(e.key);
+            } else if (e.key === 'Backspace') {
+                deleteNum();
+            } else if (e.key === 'Escape' || e.key === 'Delete') {
+                clearNum();
+            }
+        }
+    });
+
     window.onload = resetIdleTimer;
     window.onmousemove = resetIdleTimer;
     window.onmousedown = resetIdleTimer;
@@ -1730,7 +1828,6 @@
         } else {
             document.getElementById('errorMsg').style.display = 'block';
             document.getElementById('accessPass').value = '';
-            document.getElementById('accessPass').focus();
         }
     }
 
